@@ -1,0 +1,55 @@
+{% load static %}
+<style>
+    .notification {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background-color: #4CAF50; /* Green background */
+        color: white; /* White text */
+        border: 1px solid #388E3C; /* Darker green border */
+        padding: 5px;
+        border-radius: 5px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        opacity: 1;
+        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        transform: translateY(-10px);
+        
+    }
+
+    .notification.hidden {
+        opacity: 0;
+        transform: translateY(0px);
+    }
+</style>
+
+
+{% if messages %}
+<div  id="notification-container">
+    {% for message in messages %}
+        <div class="notification">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var notifications = document.querySelectorAll('.notification');
+
+        function hideNotification(notification) {
+            notification.classList.add('hidden');
+            setTimeout(function() {
+                notification.remove();
+            }, 500); // Match this with the duration of the CSS transition
+        }
+
+        notifications.forEach(function(notification) {
+            setTimeout(function() {
+                hideNotification(notification);
+            }, 3000); // Display each notification for 3 seconds
+        });
+    });
+</script>
+
+    

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} Add Transaction {% endblock title %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <h4 class="text-center mb-4 p-3 rounded" style="background: linear-gradient(45deg, #007bff, #6610f2); color: white;">
+            Add Transaction
+        </h4>
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <!-- Column 1 -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="id_transaction_by">Transaction By <span class="text-danger">*</span></label>
+                        {{ form.transaction_by }}
+                    </div>
+                </div>
+
+                <!-- Column 2 -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="id_category">Category <span class="text-danger">*</span></label>
+                        {{ form.category }}
+                    </div>
+                </div>
+
+                <!-- Column 3 -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="id_transaction_type">Transaction Type <span class="text-danger">*</span></label>
+                        {{ form.transaction_type }}
+                    </div>
+                </div>
+
+                <!-- Column 4 -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="id_price">Price <span class="text-danger">*</span></label>
+                        {{ form.price }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Column 1 -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="id_invoice_no">Invoice No</label>
+                        {{ form.invoice_no }}
+                    </div>
+                </div>
+
+                <!-- Column 2 -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="id_invoice_id">Invoice ID</label>
+                        {{ form.invoice_id }}
+                    </div>
+                </div>
+
+                <!-- Column 3 -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="id_invoice_date">Invoice Date</label>
+                        {{ form.invoice_date }}
+                    </div>
+                </div>
+
+                <!-- Column 4 -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="id_check_no">Check No</label>
+                        {{ form.check_no }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description in full width -->
+            <br>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="id_description">Description</label>
+                        <div style="border: 1px solid #ced4da; padding: 5px; border-radius: 5px; background: white;">
+                            {{ form.description }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <button type="submit" class="btn btn-primary w-100">Save Transaction</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Include jQuery & Select2 for searchable dropdowns -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<!-- CKEditor Script -->
+{{ form.media }}
+
+<script>
+    $(document).ready(function() {
+        // Apply Select2 to transaction_by and category fields
+        $('.select2').select2({
+            width: '100%',
+            placeholder: "Select an option",
+            allowClear: true
+        });
+
+        // Restrict max length for fields
+        $('input[maxlength]').on('input', function() {
+            if (this.value.length > this.maxLength) {
+                this.value = this.value.slice(0, this.maxLength);
+            }
+        });
+    });
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+    }
+
+    .form-group label {
+        font-weight: bold;
+    }
+
+    /* Properly positioned description label */
+    .form-group label[for="id_description"] {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    /* Smaller description box */
+    .cke_textarea_inline {
+        min-height: 100px !important; 
+        max-height: 150px !important;
+        border: none;
+        background: white;
+    }
+</style>
+{% endblock content %}
