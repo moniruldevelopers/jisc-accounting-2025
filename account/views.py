@@ -1,7 +1,7 @@
 import pandas as pd
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
-from django.contrib import messages
+from django.contrib.auth.hashers import make_password
 from .forms import *
 from .models import *
 from django.shortcuts import render, get_object_or_404, redirect
@@ -13,6 +13,7 @@ from datetime import date
 from django.utils.timezone import now
 from .models import Transaction
 from datetime import datetime
+from django.contrib import messages
 from django.utils.timezone import localtime
 import pytz
 
@@ -27,7 +28,8 @@ def upload_users(request):
             existing_users_count = 0
 
             try:
-                df = pd.read_excel(file)
+                # Explicitly specify the openpyxl engine
+                df = pd.read_excel(file, engine='openpyxl')
 
                 for index, row in df.iterrows():
                     username = str(row['id']).strip()
@@ -49,7 +51,7 @@ def upload_users(request):
                         existing_users_count += 1
 
                     # Manually create the Profile if it doesn't exist
-                    profile, created = Profile.objects.get_or_create(user=user)
+                    profile, _ = Profile.objects.get_or_create(user=user)
 
                     # Update the phone number if available
                     if phone_number:
@@ -65,6 +67,7 @@ def upload_users(request):
         form = UploadExcelForm()
 
     return render(request, 'user/upload_users.html', {'form': form})
+
 
 
 def home(request):
@@ -150,6 +153,7 @@ def transaction_list(request):
     # Apply search filter if search query is present
     if search_query:
         transactions = transactions.filter(
+            Q(transaction_id__icontains=search_query) |  # Search by transaction ID
             Q(transaction_by__username__icontains=search_query) |
             Q(transaction_by__first_name__icontains=search_query) |
             Q(transaction_by__last_name__icontains=search_query) |
@@ -165,7 +169,7 @@ def transaction_list(request):
             messages.warning(request, "No matching transactions found.")
 
     # Pagination: Show 10 transactions per page
-    paginator = Paginator(transactions, 2)  # Show 10 transactions per page
+    paginator = Paginator(transactions, 10)  # Show 10 transactions per page
     page_number = request.GET.get('page')
     transactions = paginator.get_page(page_number)
 
@@ -191,3 +195,69 @@ def delete_transaction(request, transaction_id):
 
     # Redirect to the transaction list page
     return redirect('transaction_list')
+
+
+def user_list(request):
+    query = request.GET.get('q', '')
+
+    users = User.objects.all().order_by('-date_joined') # Order by date_joined descending
+    if query:
+        users = users.filter(username__icontains=query)
+
+    admin_users = users.filter(is_staff=True)
+    regular_users = users.filter(is_staff=False, is_superuser=False)
+
+    # Pagination for all users
+    paginator = Paginator(users, 10)
+    page_number = request.GET.get('page')
+    users_page = paginator.get_page(page_number)
+
+    # Separate pagination for regular users
+    regular_paginator = Paginator(regular_users, 10)
+    regular_page_number = request.GET.get('regular_page')
+    regular_users_page = regular_paginator.get_page(regular_page_number)
+
+    context = {
+        'users': users_page,
+        'admin_users': admin_users,
+        'regular_users': regular_users_page,
+        'total_users': users.count(),
+        'total_admin_users': admin_users.count(),
+        'total_regular_users': regular_users.count(),
+        'query': query,
+    }
+
+    return render(request, 'user/user_list.html', context)
+
+
+def edit_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    profile, created = Profile.objects.get_or_create(user=user)
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile) #add request.FILES
+        if form.is_valid():
+            form.save()
+            user.first_name = request.POST.get('first_name', user.first_name)
+            user.email = request.POST.get('email', user.email)
+            user.save()
+            messages.success(request, 'User updated successfully!')
+            return redirect('user_list')
+    else:
+        form = ProfileForm(instance=profile)
+
+    return render(request, 'user/edit_user.html', {'user': user, 'form': form})
+
+def delete_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    user.delete()
+    messages.success(request, 'User deleted successfully!')
+    return redirect('user_list')
+
+def reset_password(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    new_password = user.username  # Reset password to default (username)
+    user.password = make_password(new_password)
+    user.save()
+    messages.success(request, f'Password reset successfully! New password: {new_password}')
+    return redirect('user_list')

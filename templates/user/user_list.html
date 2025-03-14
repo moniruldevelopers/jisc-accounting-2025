@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} User Management {% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-success text-center">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    <div class="row text-center">
+        <div class="col-md-4">
+            <div class="card shadow-lg bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Users</h5>
+                    <h2>{{ total_users }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-lg bg-warning text-white">
+                <div class="card-body">
+                    <h5>Superusers & Staff</h5>
+                    <h2>{{ total_admin_users }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-lg bg-success text-white">
+                <div class="card-body">
+                    <h5>Regular Users</h5>
+                    <h2>{{ total_regular_users }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6 offset-md-3">
+            <form method="GET" class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Search users..." value="{{ query }}">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                {% if query %}
+                <a href="{% url 'user_list' %}" class="btn btn-secondary"><i class="fas fa-times"></i></a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-lg mt-4">
+        <div class="card-header bg-dark text-white">
+            <h5><i class="fas fa-user-shield"></i> Superusers & Staff</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="bg-primary text-white text-center">
+                        <tr>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in admin_users %}
+                        <tr class="text-center">
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.first_name|default:"N/A" }}</td>
+                            <td>{{ user.profile.email|default:"N/A" }}</td>
+                            <td>{{ user.profile.phone_number|default:"N/A" }}</td>
+                            <td>
+                                <a href="{% url 'edit_user' user.id %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
+                                <a href="{% url 'reset_password' user.id %}" class="btn btn-info btn-sm"><i class="fas fa-key"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No Superusers or Staff Found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-lg mt-4">
+        <div class="card-header bg-secondary text-white">
+            <h5><i class="fas fa-users"></i> Regular Users</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="bg-success text-white text-center">
+                        <tr>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in regular_users %}
+                        <tr class="text-center">
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.first_name|default:"N/A" }}</td>
+                            <td>{{ user.profile.email|default:"N/A" }}</td>
+                            <td>{{ user.profile.phone_number|default:"N/A" }}</td>
+                            <td>
+                                <a href="{% url 'edit_user' user.id %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
+                                <a href="{% url 'reset_password' user.id %}" class="btn btn-info btn-sm"><i class="fas fa-key"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No Regular Users Found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center my-4">
+                <div>
+                    <span>Page {{ regular_users.number }} of {{ regular_users.paginator.num_pages }}</span>
+                </div>
+                <div>
+                    <div class="btn-group">
+                        {% if regular_users.has_previous %}
+                        <a href="?regular_page=1&q={{ query }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-angle-double-left"></i> First
+                        </a>
+                        <a href="?regular_page={{ regular_users.previous_page_number }}&q={{ query }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                        {% endif %}
+                        {% if regular_users.has_next %}
+                        <a href="?regular_page={{ regular_users.next_page_number }}&q={{ query }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-chevron-right"></i> Next
+                        </a>
+                        <a href="?regular_page={{ regular_users.paginator.num_pages }}&q={{ query }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-angle-double-right"></i> Last
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock content %}

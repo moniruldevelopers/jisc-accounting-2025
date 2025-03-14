@@ -44,6 +44,7 @@
             <table class="table table-bordered table-sm">
                 <thead>
                     <tr>
+                        <th>Transaction ID</th>
                         <th>User ID</th>
                         <th>Full Name</th>
                         <th>Category</th>
@@ -57,9 +58,10 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody style="font-size: 12px;" >
                     {% for transaction in transactions %}
                     <tr id="transaction-{{ transaction.id }}">
+                        <td>{{ transaction.transaction_id }}</td>
                         <td>{{ transaction.transaction_by.username }}</td>
                         <td>{{ transaction.transaction_by.first_name }} {{ transaction.transaction_by.last_name }}</td>
                         <td>{{ transaction.category.name }}</td>

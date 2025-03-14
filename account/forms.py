@@ -1,5 +1,5 @@
 from django import forms
-from .models import Transaction
+from .models import *
 from ckeditor.widgets import CKEditorWidget
 from django.forms.widgets import DateInput
 
@@ -30,3 +30,13 @@ class TransactionForm(forms.ModelForm):
         if price is not None and price < 0:
             raise forms.ValidationError("Price cannot be negative.")
         return price
+    
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['phone_number', 'profile_picture']  # Add 'profile_picture' here
+        widgets = {
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'profile_picture': forms.FileInput(attrs={'class': 'form-control'}), #add profile picture widget
+        }
