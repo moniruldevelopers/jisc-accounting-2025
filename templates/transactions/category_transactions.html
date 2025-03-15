@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions for {{ category }}{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <h4 class="text-center mb-4 text-white p-3 rounded" style="background: linear-gradient(45deg, #007bff, #6610f2);">
+        Transactions for Category: {{ category }}
+    </h4>
+    <p>Total Transactions: {{ total_transactions }}</p>
+
+    <table class="table table-bordered" style="font-size: 14px;">
+        <thead style="background-color: darkblue; color: white;">  <!-- Blue table header -->
+            <tr>
+                <th>Transaction ID</th>
+                <th>Transaction Type</th>
+                <th>Full Name</th>
+                <th>Price</th>
+                <th>Description</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in page_obj %}
+            <tr>
+                <td>{{ transaction.transaction_id }}</td>
+                <td>{{ transaction.transaction_by.get_full_name }} ({{ transaction.transaction_by.username }})</td>
+                <td>{{ transaction.transaction_type }}</td>
+                <td>{{ transaction.price }}</td>
+                <td>{{ transaction.description|safe }}</td>
+                <td>{{ transaction.created_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <div>
+            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </div>
+        <div>
+            <div class="btn-group">
+                {% if page_obj.has_previous %}
+                <a href="?page=1&search={{ search_query }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-angle-double-left"></i> First
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-chevron-right"></i> Next
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}&search={{ search_query }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-angle-double-right"></i> Last
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

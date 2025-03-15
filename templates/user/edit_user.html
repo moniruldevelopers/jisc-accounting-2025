@@ -3,39 +3,45 @@
 {% block title %}Edit User{% endblock title %}
 
 {% block content %}
-<div class="container mt-5">
-    <h3 class="text-center mb-4">Edit User</h3>
-
-    <form method="post" enctype="multipart/form-data"> {# Add enctype for file uploads #}
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" class="form-control" value="{{ user.username }}" disabled>
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow-lg overflow-hidden" style="width: 450px;">
+        <div class="p-4 text-white text-center" style="background: linear-gradient(45deg, #007bff, #6610f2);">
+            <h3 class="mb-0">Edit User</h3>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Full Name</label>
-            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+        <div class="card-body p-4">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ user.email }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    {{ form.phone_number }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Profile Picture</label>
+                    {{ form.profile_picture }}
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" alt="Current Profile Picture" class="mt-2 img-fluid rounded" style="max-height: 150px;">
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </form>
+            <a href="{% url 'user_list' %}" class="btn btn-secondary mt-3 w-100">
+                <i class="fas fa-arrow-left"></i> Back to Users
+            </a>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" value="{{ user.email }}">
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Phone Number</label>
-            {{ form.phone_number }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Profile Picture</label>
-            {{ form.profile_picture }}
-        </div>
-        <button type="submit" class="btn btn-primary w-100">
-            <i class="fas fa-save"></i> Save Changes
-        </button>
-    </form>
-
-    <a href="{% url 'user_list' %}" class="btn btn-secondary mt-3 w-100">
-        <i class="fas fa-arrow-left"></i> Back to Users
-    </a>
+    </div>
 </div>
-
 {% endblock content %}

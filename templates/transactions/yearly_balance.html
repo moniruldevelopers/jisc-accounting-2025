@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Yearly Available Balance{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header text-white text-center py-3" style="background: linear-gradient(45deg, #007bff, #6610f2);">
+            <h3>Yearly Available Balance</h3>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="mb-3">
+                <label for="year" class="form-label"><strong>Select Year:</strong></label>
+                <select name="year" id="year" class="form-select" onchange="this.form.submit()">
+                    {% for year in available_years %}
+                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+
+            <table class="table table-bordered text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Month</th>
+                        <th>Income</th>
+                        <th>Borrow</th>
+                        <th>Expense</th>
+                        <th>Given</th>
+                        <th>Available Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in monthly_balance %}
+                    <tr>
+                        <td>{{ data.month }}</td>
+                        <td>{{ data.income }}</td>
+                        <td>{{ data.borrow }}</td>
+                        <td>{{ data.expense }}</td>
+                        <td>{{ data.given }}</td>
+                        <td><strong>{{ data.available_balance }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-success">
+                        <td colspan="5"><strong>Total Yearly Available Balance</strong></td>
+                        <td><strong>{{ total_yearly_balance }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

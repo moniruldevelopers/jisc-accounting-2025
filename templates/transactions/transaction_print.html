@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Transaction Memo{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg p-4" id="print-area" style="width: 400px; margin: 0 auto;">
+        <div class="text-center mb-3">
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <img src="{% static 'assets/img/jiscollege.png' %}" alt="School Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+                <h6 style="font-family: 'Arial', sans-serif; font-weight: bold; margin-bottom: 0;">Jahanara Israil School & College</h6>
+            </div>
+            <p style="font-size: 14px; margin-bottom: 2px;">999 College Row, Barishal</p>
+            <p style="font-size: 14px;">Phone: 01xxxxxxxxxxx</p>
+            <hr>
+        </div>
+
+       
+
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th colspan="2" class="text-center">Transaction Information</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Transaction ID:</strong></td>
+                    <td>{{ transaction.transaction_id }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Transaction By:</strong></td>
+                    <td>{{ transaction.transaction_by.get_full_name }} ({{ transaction.transaction_by.username }})</td>
+                </tr>
+                <tr>
+                    <td><strong>Transaction Type:</strong></td>
+                    <td>{{ transaction.transaction_type|title }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Price:</strong></td>
+                    <td>{{ transaction.price }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Created Date:</strong></td>
+                    <td>{{ transaction.created_date|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="border-bottom: 2px solid #ddd; margin-bottom: 15px; margin-top: 15px;"></div>
+
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{% if transaction.description %}{{ transaction.description }}{% else %}No description added{% endif %}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="border-top: 2px solid #ddd; margin-top: 15px;"></div>
+
+        <div class="text-center mt-3" id="printButton">
+            <button class="btn btn-primary" onclick="printMemo()">Print</button>
+            <a href="{% url 'transaction_list' %}" class="btn btn-secondary">Go to Transaction List</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function printMemo() {
+        var printButton = document.getElementById('printButton');
+        printButton.style.display = 'none';
+
+        var printContents = document.getElementById('print-area').innerHTML;
+        var originalContents = document.body.innerHTML;
+
+        document.body.innerHTML = printContents;
+
+        window.onafterprint = function() {
+            document.body.innerHTML = originalContents;
+            printButton.style.display = 'block';
+            window.location.href = "{% url 'transaction_list' %}";
+        };
+
+        window.print();
+    }
+</script>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #print-area, #print-area * {
+            visibility: visible;
+        }
+        #print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 400px;
+            margin: 0;
+        }
+        #printButton {
+            display: none;
+        }
+    }
+</style>
+{% endblock content %}

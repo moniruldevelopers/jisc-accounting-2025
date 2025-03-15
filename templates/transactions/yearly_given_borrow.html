@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Yearly Given & Borrow{% endblock title %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header text-white text-center" style="background: linear-gradient(45deg, #007bff, #6610f2);">
+            <h4>Yearly Given & Borrow Transactions</h4>
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-3">
+                <label for="year" class="form-label">Select Year:</label>
+                <select name="year" id="year" class="form-control w-auto d-inline-block">
+                    {% for year in available_years %}
+                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="bg-dark text-white">
+                        <tr>
+                            <th>Month</th>
+                            <th>Transaction ID</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Edit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for month_data in monthly_transactions %}
+                            {% for transaction in month_data.transactions %}
+                                <tr>
+                                    <td>{{ month_data.month }}</td>
+                                    <td>{{ transaction.transaction_id }}</td>
+                                    <td>{{ transaction.transaction_by.first_name }} {{ transaction.transaction_by.last_name }}</td>
+                                    <td class="{% if transaction.transaction_type == 'given' %}text-danger{% else %}text-success{% endif %}">
+                                        {{ transaction.transaction_type|title }}
+                                    </td>
+                                    <td>{{ transaction.price }}</td>
+                                    <td>{{ transaction.created_date|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <a href="{% url 'edit_transaction' transaction.id %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No transactions found for the selected year.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

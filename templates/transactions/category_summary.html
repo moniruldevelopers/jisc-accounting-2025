@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Category Summary{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <h4 class="text-center mb-4 text-white p-3 rounded" style="background: linear-gradient(45deg, #007bff, #6610f2);">
+        Category Summary
+    </h4>
+    <table class="table table-bordered">
+        <thead style="background-color: darkblue; color: white;">  <!-- Blue table header -->
+            <tr>
+                <th>Category</th>
+                <th>Total Income</th>
+                <th>Total Expense</th>
+                <th>Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in category_data %}
+            <tr>
+                <td>
+                    <a href="{% url 'category_transactions' data.category %}" style="text-decoration: none; color: inherit;">
+                        {{ forloop.counter }}.   {{ data.category }}
+                    </a>
+                </td>
+                <td>{{ data.total_income }}</td>
+                <td>{{ data.total_expense }}</td>
+                <td>{{ data.balance }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

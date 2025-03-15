@@ -8,7 +8,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
 from datetime import datetime, timedelta
-from django.db.models import Sum
+from django.db.models import Sum,Count
 from datetime import date
 from django.utils.timezone import now
 from .models import Transaction
@@ -16,7 +16,7 @@ from datetime import datetime
 from django.contrib import messages
 from django.utils.timezone import localtime
 import pytz
-
+from urllib.parse import quote
 
 
 def upload_users(request):
@@ -114,7 +114,6 @@ def home(request):
 
 
 
-
 def add_edit_transaction(request, transaction_id=None):
     transaction = None
 
@@ -124,25 +123,26 @@ def add_edit_transaction(request, transaction_id=None):
     if request.method == "POST":
         form = TransactionForm(request.POST, instance=transaction)
         if form.is_valid():
-            # Save the transaction
             saved_transaction = form.save()
-
-            # Get the user's full name from the transaction
             user_full_name = saved_transaction.transaction_by.get_full_name() or saved_transaction.transaction_by.username
-
-            # Display success message with the user's full name
             messages.success(request, f"Transaction added successfully for {user_full_name}!")
 
-            return redirect('transaction_list')
-            
+            # Redirect to the print view
+            return redirect('transaction_print', transaction_id=saved_transaction.id)
+
     else:
         form = TransactionForm(instance=transaction)
 
-    # Override the transaction_by field to show "username - full name"
     form.fields['transaction_by'].queryset = User.objects.all()
     form.fields['transaction_by'].label_from_instance = lambda obj: f"{obj.username} - {obj.get_full_name() or obj.username}"
 
     return render(request, 'transactions/add_transaction.html', {'form': form, 'transaction': transaction})
+
+
+def transaction_print(request, transaction_id):
+    transaction = get_object_or_404(Transaction, id=transaction_id)
+    return render(request, 'transactions/transaction_print.html', {'transaction': transaction})
+
 
 def transaction_list(request):
     search_query = request.GET.get('search', '')
@@ -261,3 +261,163 @@ def reset_password(request, user_id):
     user.save()
     messages.success(request, f'Password reset successfully! New password: {new_password}')
     return redirect('user_list')
+
+
+def yearly_balance(request):
+    # Get available years dynamically from the transactions
+    available_years = Transaction.objects.dates('created_date', 'year', order='DESC').distinct()
+    available_years = [year.year for year in available_years]
+
+    # Get the selected year from GET request or default to the most recent available year
+    selected_year = request.GET.get('year', available_years[0] if available_years else datetime.now().year)
+    selected_year = int(selected_year)
+
+    # Initialize monthly data storage
+    monthly_balance = []
+    total_yearly_balance = 0
+
+    # Loop through each month (1 to 12)
+    for month in range(1, 13):
+        # Get total income for the month
+        total_income = Transaction.objects.filter(
+            transaction_type='income',
+            created_date__year=selected_year,
+            created_date__month=month
+        ).aggregate(Sum('price'))['price__sum'] or 0
+
+        # Get total borrow for the month
+        total_borrow = Transaction.objects.filter(
+            transaction_type='borrow',
+            created_date__year=selected_year,
+            created_date__month=month
+        ).aggregate(Sum('price'))['price__sum'] or 0
+
+        # Get total expense for the month
+        total_expense = Transaction.objects.filter(
+            transaction_type='expense',
+            created_date__year=selected_year,
+            created_date__month=month
+        ).aggregate(Sum('price'))['price__sum'] or 0
+
+        # Get total given for the month
+        total_given = Transaction.objects.filter(
+            transaction_type='given',
+            created_date__year=selected_year,
+            created_date__month=month
+        ).aggregate(Sum('price'))['price__sum'] or 0
+
+        # Calculate available balance
+        available_balance = (total_income + total_borrow) - (total_expense + total_given)
+
+        # Add to yearly total
+        total_yearly_balance += available_balance
+
+        # Store data for the month
+        monthly_balance.append({
+            'month': datetime(selected_year, month, 1).strftime('%B'),
+            'income': total_income,
+            'borrow': total_borrow,
+            'expense': total_expense,
+            'given': total_given,
+            'available_balance': available_balance
+        })
+
+    context = {
+        'selected_year': selected_year,
+        'monthly_balance': monthly_balance,
+        'available_years': available_years,
+        'total_yearly_balance': total_yearly_balance
+    }
+
+    return render(request, 'transactions/yearly_balance.html', context)
+
+
+def yearly_given_borrow(request):
+    # Get available years dynamically
+    available_years = Transaction.objects.filter(transaction_type__in=['given', 'borrow']).dates('created_date', 'year', order='DESC').distinct()
+    available_years = [year.year for year in available_years]
+
+    # Get selected year
+    selected_year = request.GET.get('year', available_years[0] if available_years else datetime.now().year)
+    selected_year = int(selected_year)
+
+    # Initialize monthly transaction list
+    monthly_transactions = []
+
+    for month in range(1, 13):
+        transactions = Transaction.objects.filter(
+            transaction_type__in=['given', 'borrow'],
+            created_date__year=selected_year,
+            created_date__month=month
+        ).select_related('transaction_by')  # Fetch related User objects
+
+        monthly_transactions.append({
+            'month': datetime(selected_year, month, 1).strftime('%B'),
+            'transactions': transactions
+        })
+
+    context = {
+        'selected_year': selected_year,
+        'monthly_transactions': monthly_transactions,
+        'available_years': available_years
+    }
+
+    return render(request, 'transactions/yearly_given_borrow.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+def category_summary(request):
+    categories = TransactionCategory.objects.all()  # Fetch all categories
+    category_data = []
+
+    for category in categories:
+        # Get total income for the category
+        total_income = Transaction.objects.filter(
+            category=category, transaction_type='income'
+        ).aggregate(total=Sum('price'))['total'] or 0
+
+        # Get total expense for the category
+        total_expense = Transaction.objects.filter(
+            category=category, transaction_type='expense'
+        ).aggregate(total=Sum('price'))['total'] or 0
+
+        # Calculate balance
+        balance = total_income - total_expense
+
+        # Append category data with totals and balance
+        category_data.append({
+            'category': category.name,
+            'total_income': total_income,
+            'total_expense': total_expense,
+            'balance': balance,
+        })
+
+    return render(request, 'transactions/category_summary.html', {'category_data': category_data})
+
+
+
+
+def category_transactions(request, category_name):
+    # Fetch all transactions for the selected category
+    category = TransactionCategory.objects.get(name=category_name)
+    transactions = Transaction.objects.filter(category=category)
+    total_transactions = transactions.count()
+
+    paginator = Paginator(transactions, 10)  # Show 10 transactions per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'transactions/category_transactions.html', {
+        'category': category_name,
+        'page_obj': page_obj,
+        'total_transactions': total_transactions,
+    })
